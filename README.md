@@ -18,8 +18,8 @@ SlothCloud is a web-based media server made using Flask for Python3
 *   Flask for Python3 [Flask.pocoo.org](http://flask.pocoo.org/)
 
 ## Useful Information
-I checked it in Raspbian and other Debian-based distros, no love for MacOS or Windows sorry :(
+Works on Unix and NT systems
 
-All sample files have been downloaded from [Internet Archive](https://archive.org) and fall under Public Domain
+All sample files have been downloaded from [Internet Archive](https://archive.org) or have been made by us and fall under Public Domain
 
 More features comming soon :D
