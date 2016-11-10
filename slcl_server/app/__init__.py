@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from app.config.constants import ninia_path
+from app.utils import nt
 from flask import Flask, render_template, request, send_from_directory
 from flask_autoindex import AutoIndex
 import json
@@ -10,7 +11,7 @@ import os
 
 
 app = Flask(__name__)
-AutoIndex(app,browse_root=ninia_path + "/app/static/media", add_url_rules=True)
+AutoIndex(app, browse_root=ninia_path + nt("/app/static/media"), add_url_rules=True)
 
 
 # ignore this one
@@ -31,7 +32,7 @@ def antigravity():
 # Returns error codes and descriptions
 @app.route("/errors")
 def errors():
-    with open(ninia_path + "/app/config/errors.json", 'r') as error_list:
+    with open(ninia_path + nt("/app/config/errors.json"), 'r') as error_list:
         return error_list.read()
 
 
@@ -58,20 +59,20 @@ def list_root():
     """
     :return: json of root media folder
     """
-    index = modules.get_index()
-    return index if index else json.dumps({"error": "4"})
+    rindex = modules.get_index()
+    return rindex if rindex else json.dumps({"error": "4"})
 
 
 # returns json of dir
-@app.route("/listdir/<path:dir>")
-def list_dir(dir):
+@app.route("/listdir/<path:directory>")
+def list_dir(directory):
     """
     json of specified directory
-    :param dir: directory to be shown
+    :param directory: directory to be shown
     :return: json of the structure of the directory
     """
-    index = modules.get_index(dir)
-    return index if index else json.dumps({"error": "4"})  # Not a directory
+    dindex = modules.get_index(directory)
+    return dindex if dindex else json.dumps({"error": "4"})  # Not a directory
 
 
 # root directory
