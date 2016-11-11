@@ -6,7 +6,7 @@ The goal of this file is to have here the functions app/__init__.py uses
 so that file can be read with no difficulties.
 """
 
-from app.config.constants import ninia_path, host, port, upload_folder
+from app.config.constants import app_path, host, media_path, port, upload_folder
 from app.utils import get_permitted_formats, nt
 import json
 import os
@@ -89,17 +89,16 @@ def get_index(path=""):
     passed as a parameter. Each folder has a list containing everything in of it.
     :param path: optional, default=root
     """
-    rel_path = path
+    path = nt(path)
+    rel_path = path if path else "media"
     if not path:
-        path = ninia_path + nt("/app/static/media")
+        path = media_path
     else:
-        path = ninia_path + nt("/app/static/media/" + path)
-
+        path = media_path + nt(path)
     if os.path.exists(path) and os.path.isdir(path):
-        with open(nt("app/config/permissions.json")) as permission_file:
-            permitted_dirs = json.load(permission_file)["directories"]["index"]
-
-        return json.dumps({rel_path: get_scheme(path, permitted_dirs=permitted_dirs)},
+        return json.dumps({rel_path: get_scheme(path,
+                                permitted_dirs=get_config("permissions")
+                                ["directories"]["index"])},
                           ensure_ascii=False, indent=4, sort_keys=True)
     else:
         return {}
@@ -114,6 +113,9 @@ def get_scheme(path, restricted=True, permitted_dirs=[]):
     :param permitted_dirs: list of permitted directories
     :return: dictionary in json format
     """
+    path = nt(path)
+    permitted_dirs = [nt(pdir) for pdir in permitted_dirs]
+    
     if restricted:
         for directory in permitted_dirs:
             if directory in path:
@@ -154,8 +156,7 @@ def read_scheme(path="", entries={}, file_types={}):
     :param file_types: supported file types
     :return: dictionary with files with files sorted in categories (audio, video..)
     """
-    app_path = ninia_path + nt("/app/")
-    scheme = get_scheme(app_path + nt("static/media" + path), restricted=False)
+    scheme = get_scheme(app_path + nt("/static/media" + path), restricted=False)
     if not file_types:
         file_types = get_permitted_formats()
 
@@ -191,7 +192,7 @@ def remove(path):
 
     if path[0] == '/':
         path = path[1:]
-    path = ninia_path + nt("/app/static/media/" + path)
+    path = app_path + nt("/static/media/" + path)
     try:
         if os.path.isfile(path):
             os.remove(path)
@@ -213,7 +214,7 @@ def rename(old, new):
     """
     if old != "None" and new != "None":
 
-        if os.path.isfile(ninia_path + nt("/app/static/media/" + old)):
+        if os.path.isfile(app_path + nt("/static/media/" + old)):
 
             if old.split(".")[-1].lower() == new.split(".")[
                 -1].lower() and len(
@@ -226,14 +227,14 @@ def rename(old, new):
                             [x + '/' for x in new.split('/')[0:-1]]))
 
                     os.rename(
-                        ninia_path + nt("/app/static/media/" + old),
-                        ninia_path + nt("/app/static/media/" + new)
+                        app_path + nt("/static/media/" + old),
+                        app_path + nt("/static/media/" + new)
                     )
-                    clean_dir(ninia_path + nt("/app/static/media"))
+                    clean_dir(app_path + nt("/static/media"))
                     return ""
 
                 except Exception:
-                    clean_dir(ninia_path + nt("/app/static/media"))
+                    clean_dir(app_path + nt("/static/media"))
                     # Unexpected error
                     return json.dumps({"error": "0"})
             else:
@@ -264,15 +265,15 @@ def upload(file, folder):
     filename = folder + "/" + filename
 
     if not folder.split('/')[0].lower().strip() in get_config("permissions")[
-        "reserved words"]:
+            "reserved words"]:
         # create necessary folders
         if len(folder.split('/')) > 1:
             makedirs(''.join([x + '/' for x in folder.split('/')[0:-1]]))
 
         # save file in abspath
         try:
-            file.save(''.join([upload_folder] + [
-                "/" + x for x in filename.split('/')]))
+            file.save(nt(''.join([upload_folder] + [
+                "/" + x for x in filename.split('/')])))
         except Exception:
             # Unexpected error
             return json.dumps({"error": "0"})

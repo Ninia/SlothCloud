@@ -1,7 +1,7 @@
 # !/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from app.config.constants import ninia_path
+from app.config.constants import app_path, media_path
 from app.utils import nt
 from flask import Flask, render_template, request, send_from_directory
 from flask_autoindex import AutoIndex
@@ -11,7 +11,7 @@ import os
 
 
 app = Flask(__name__)
-AutoIndex(app, browse_root=ninia_path + nt("/app/static/media"), add_url_rules=True)
+AutoIndex(app, browse_root=media_path, add_url_rules=True)
 
 
 # ignore this one
@@ -32,7 +32,7 @@ def antigravity():
 # Returns error codes and descriptions
 @app.route("/errors")
 def errors():
-    with open(ninia_path + nt("/app/config/errors.json"), 'r') as error_list:
+    with open(app_path + nt("/config/errors.json"), 'r') as error_list:
         return error_list.read()
 
 
@@ -94,8 +94,8 @@ def open_media(file):
     :param file: file to be visualized
     :return: html template with file
     """
-
-    with open(ninia_path + "/app/config/permissions.json", "r") as format_file:
+    file = nt(file)
+    with open(nt(app_path + "/config/permissions.json"), "r") as format_file:
         file_formats = json.load(format_file)["formats"]
 
     for file_type in file_formats:
@@ -134,10 +134,11 @@ def view(path):
     :return: requested file
     """
 
-    if os.path.isfile(ninia_path + "/app/static/media/" + path):
-        return send_from_directory(
-            ninia_path + "/app/static/media/" + ''.join(
-                path.split('/')[0:-1]) if '/' in path else '',
+    if os.path.isfile(media_path + nt(path)):
+        return send_from_directory(nt(
+            # path to file folder
+            media_path + ''.join(path.split('/')[0:-1]) if '/' in path else ''),
+            # file
             path.split('/')[-1])
     else:
         return json.dumps({"error": "2"})
@@ -150,7 +151,7 @@ def upload():
     :return: error if errors were made
     """
     # folder passed as a parameter in the url
-    subfolder = request.args.get("folder").replace('"', '').replace("'", '')
+    subfolder = nt(request.args.get("folder").replace('"', '').replace("'", ''))
     # file of the http post request
     file = request.files["file"]
 
